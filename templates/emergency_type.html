@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Type - GoldenLink</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="/patient-form?hospital={{ hospital }}" class="back-btn">←</a>
+        <div style="flex: 1"></div>
+        <a href="/" class="cancel-btn">Cancel</a>
+      </div>
+
+      <p class="hospital-name">{{ hospital }}</p>
+
+      <h2 class="page-title">Select Emergency Type</h2>
+      <p class="page-subtitle">Choose the type of emergency</p>
+
+      <div class="emergency-grid">
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Cardiac Emergency')"
+        >
+          <div class="emergency-icon">🫀</div>
+          <div class="emergency-name">Cardiac Emergency</div>
+        </div>
+
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Respiratory Emergency')"
+        >
+          <div class="emergency-icon">🫁</div>
+          <div class="emergency-name">Respiratory Emergency</div>
+        </div>
+
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Trauma/Accident')"
+        >
+          <div class="emergency-icon">🚑</div>
+          <div class="emergency-name">Trauma/Accident</div>
+        </div>
+
+        <div class="emergency-card" onclick="selectEmergency(this, 'Stroke')">
+          <div class="emergency-icon">🧠</div>
+          <div class="emergency-name">Stroke</div>
+        </div>
+
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Poisoning')"
+        >
+          <div class="emergency-icon">☠️</div>
+          <div class="emergency-name">Poisoning</div>
+        </div>
+
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Burn Injury')"
+        >
+          <div class="emergency-icon">🔥</div>
+          <div class="emergency-name">Burn Injury</div>
+        </div>
+
+        <div
+          class="emergency-card"
+          onclick="selectEmergency(this, 'Obstetric Emergency')"
+        >
+          <div class="emergency-icon">🤰</div>
+          <div class="emergency-name">Obstetric Emergency</div>
+        </div>
+
+        <div class="emergency-card" onclick="selectEmergency(this, 'Other')">
+          <div class="emergency-icon">⚕️</div>
+          <div class="emergency-name">Other</div>
+        </div>
+      </div>
+
+      <button
+        id="continueBtn"
+        class="btn-primary"
+        style="opacity: 0.5; cursor: not-allowed"
+        disabled
+      >
+        Continue to Voice Recording
+      </button>
+    </div>
+
+    <script>
+      let selectedType = null;
+
+      function selectEmergency(element, type) {
+        // Remove previous selection
+        document.querySelectorAll(".emergency-card").forEach((card) => {
+          card.classList.remove("selected");
+        });
+
+        // Add selection to clicked card
+        element.classList.add("selected");
+        selectedType = type;
+
+        // Enable continue button
+        const btn = document.getElementById("continueBtn");
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+        btn.onclick = function () {
+          window.location.href = `/voice-recording?type=${encodeURIComponent(selectedType)}`;
+        };
+      }
+    </script>
+  </body>
+</html>
