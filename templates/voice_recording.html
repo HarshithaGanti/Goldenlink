@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Recording - GoldenLink</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="/emergency-type" class="back-btn">←</a>
+        <h2
+          style="
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+          "
+        >
+          Emergency Report
+        </h2>
+        <div style="width: 36px"></div>
+      </div>
+
+      <p class="hospital-name">{{ hospital }}</p>
+
+      <!-- Report Table -->
+      <div class="report-table">
+        <div class="table-row">
+          <div class="table-header">Emergency Type</div>
+          <div class="table-value" id="emergencyTypeValue">
+            {{ emergency_type }}
+          </div>
+        </div>
+
+        <div class="table-row">
+          <div class="table-header">Current Symptoms</div>
+          <div class="table-value table-placeholder" id="symptomsValue">
+            Waiting for data...
+          </div>
+        </div>
+
+        <div class="table-row">
+          <div class="table-header">History of Illnesses/Medication</div>
+          <div class="table-value table-placeholder" id="historyValue">
+            Waiting for data...
+          </div>
+        </div>
+
+        <div class="table-row">
+          <div class="table-header">Procedures Followed</div>
+          <div class="table-value table-placeholder" id="proceduresValue">
+            Waiting for data...
+          </div>
+        </div>
+
+        <div class="table-row">
+          <div class="table-header">AI Generated Cautionary Note</div>
+          <div
+            class="table-value caution-text"
+            id="cautionValue"
+            style="color: #9ca3af"
+          >
+            Waiting for data...
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcription Box -->
+      <div class="transcription-box">
+        <div class="recording-status" id="recordingStatus">
+          Tap microphone to start
+        </div>
+        <div class="transcription-text" id="transcriptionText">
+          Voice transcription will appear here...
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <!-- Buttons -->
+      <div class="button-container">
+        <button class="btn-primary" id="generateBtn" onclick="generateReport()">
+          Generate Report
+        </button>
+
+        <!-- PDF and Email buttons (hidden initially) -->
+        <div id="pdfEmailButtons" style="display: none">
+          <button
+            class="btn-primary"
+            onclick="downloadPDF()"
+            style="background: #059669"
+          >
+            📄 Download PDF Report
+          </button>
+
+          <div style="display: flex; gap: 10px">
+            <input
+              type="email"
+              id="emailInput"
+              class="form-input"
+              placeholder="Enter hospital email address"
+              style="flex: 1; margin: 0"
+            />
+            <button
+              class="btn-primary"
+              onclick="sendEmail()"
+              style="width: auto; padding: 0 20px; background: #2563eb"
+            >
+              📧 Send
+            </button>
+          </div>
+        </div>
+
+        <button class="mic-button" id="micButton" onclick="toggleRecording()">
+          <span class="mic-icon">🎤</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let recognition;
+      let isRecording = false;
+      let fullTranscript = "";
+      const emergencyType = "{{ emergency_type }}";
+      let reportGenerated = false;
+
+      // Check browser support
+      if (
+        "webkitSpeechRecognition" in window ||
+        "SpeechRecognition" in window
+      ) {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        recognition.onstart = function () {
+          document.getElementById("recordingStatus").textContent =
+            "🔴 Recording...";
+        };
+
+        recognition.onresult = function (event) {
+          let interimTranscript = "";
+          let finalTranscript = "";
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ". ";
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          if (finalTranscript) {
+            fullTranscript += finalTranscript;
+          }
+
+          document.getElementById("transcriptionText").textContent =
+            fullTranscript + interimTranscript;
+        };
+
+        recognition.onerror = function (event) {
+          console.error("Speech recognition error:", event.error);
+          if (event.error === "no-speech") {
+            if (isRecording) {
+              setTimeout(() => {
+                if (isRecording) {
+                  recognition.start();
+                }
+              }, 500);
+            }
+          }
+        };
+
+        recognition.onend = function () {
+          if (isRecording) {
+            setTimeout(() => {
+              if (isRecording) {
+                recognition.start();
+              }
+            }, 500);
+          }
+        };
+      } else {
+        alert(
+          "Sorry, your browser does not support speech recognition. Please use Chrome, Edge, or Safari.",
+        );
+      }
+
+      function toggleRecording() {
+        const micButton = document.getElementById("micButton");
+
+        if (!isRecording) {
+          isRecording = true;
+          micButton.classList.add("recording");
+          recognition.start();
+        } else {
+          isRecording = false;
+          micButton.classList.remove("recording");
+          recognition.stop();
+          document.getElementById("recordingStatus").textContent =
+            "Tap microphone to start";
+        }
+      }
+
+      async function generateReport() {
+        if (!fullTranscript.trim()) {
+          alert("Please record some information first!");
+          return;
+        }
+
+        document.getElementById("symptomsValue").textContent = "Processing...";
+        document.getElementById("historyValue").textContent = "Processing...";
+        document.getElementById("proceduresValue").textContent =
+          "Processing...";
+        document.getElementById("cautionValue").textContent = "Processing...";
+
+        try {
+          const response = await fetch("/process-transcript", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              transcript: fullTranscript,
+              emergency_type: emergencyType,
+            }),
+          });
+
+          const report = await response.json();
+
+          document.getElementById("symptomsValue").innerHTML = formatList(
+            report.symptoms,
+          );
+          document.getElementById("historyValue").innerHTML = formatList(
+            report.history,
+          );
+          document.getElementById("proceduresValue").innerHTML = formatList(
+            report.procedures,
+          );
+          document.getElementById("cautionValue").innerHTML = formatList(
+            report.cautions,
+            true,
+          );
+
+          document
+            .getElementById("symptomsValue")
+            .classList.remove("table-placeholder");
+          document
+            .getElementById("historyValue")
+            .classList.remove("table-placeholder");
+          document
+            .getElementById("proceduresValue")
+            .classList.remove("table-placeholder");
+          document.getElementById("cautionValue").style.color = "#DC2626";
+
+          // Show PDF and email buttons
+          reportGenerated = true;
+          document.getElementById("pdfEmailButtons").style.display = "block";
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to generate report. Please try again.");
+        }
+      }
+
+      function formatList(items, isCaution = false) {
+        if (!items || items.length === 0) {
+          return isCaution
+            ? "No specific cautions generated"
+            : "None documented";
+        }
+        return items.map((item) => `• ${item}`).join("<br>");
+      }
+
+      async function downloadPDF() {
+        if (!reportGenerated) {
+          alert("Please generate the report first!");
+          return;
+        }
+
+        try {
+          const response = await fetch("/generate-pdf", {
+            method: "POST",
+          });
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Emergency_Report_${new Date().getTime()}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          alert("✅ PDF downloaded successfully!");
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to download PDF. Please try again.");
+        }
+      }
+
+      async function sendEmail() {
+        if (!reportGenerated) {
+          alert("Please generate the report first!");
+          return;
+        }
+
+        const email = document.getElementById("emailInput").value.trim();
+
+        if (!email) {
+          alert("Please enter an email address!");
+          return;
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          alert("Please enter a valid email address!");
+          return;
+        }
+
+        try {
+          const response = await fetch("/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: email }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert("✅ Email sent successfully to " + email);
+            document.getElementById("emailInput").value = "";
+          } else {
+            alert("❌ Failed to send email: " + result.message);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to send email. Please try again.");
+        }
+      }
+    </script>
+  </body>
+</html>

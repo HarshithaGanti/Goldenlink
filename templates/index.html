@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoldenLink - Emergency Reporting</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">
+        <span class="title-golden">Golden</span
+        ><span class="title-link">Link</span>
+      </h1>
+      <p class="subtitle">Pre-Hospital Emergency Reporting System</p>
+
+      <form action="/patient-form" method="GET">
+        <div class="form-group">
+          <label class="form-label">Select Hospital</label>
+          <select name="hospital" class="form-select" required>
+            <option value="">Choose a hospital...</option>
+            <option value="Apollo Hospital">Apollo Hospital</option>
+            <option value="Yashoda Hospital">Yashoda Hospital</option>
+            <option value="KIMS Hospital">KIMS Hospital</option>
+            <option value="Continental Hospital">Continental Hospital</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Begin Emergency Report
+        </button>
+      </form>
+    </div>
+  </body>
+</html>

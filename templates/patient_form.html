@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Information - GoldenLink</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="/" class="back-btn">←</a>
+        <h2
+          style="
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+          "
+        >
+          Patient Information
+        </h2>
+        <div style="width: 36px"></div>
+      </div>
+
+      <p class="hospital-name">{{ hospital }}</p>
+
+      <form id="patientForm">
+        <div class="form-group">
+          <label class="form-label">Patient Name</label>
+          <input
+            type="text"
+            id="patientName"
+            class="form-input"
+            placeholder="Optional"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input
+            type="number"
+            id="age"
+            class="form-input"
+            placeholder="Optional"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="gender" value="Male" />
+              <span>Male</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="gender" value="Female" />
+              <span>Female</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="gender" value="Other" />
+              <span>Other</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Blood Group</label>
+          <select id="bloodGroup" class="form-select">
+            <option value="">Select...</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact Number</label>
+          <input
+            type="tel"
+            id="contact"
+            class="form-input"
+            placeholder="Optional"
+          />
+        </div>
+
+        <button type="submit" class="btn-primary">Continue</button>
+        <div class="skip-btn" onclick="skipForm()">Skip this step</div>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById("patientForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const data = {
+            name: document.getElementById("patientName").value,
+            age: document.getElementById("age").value,
+            gender:
+              document.querySelector('input[name="gender"]:checked')?.value ||
+              "",
+            bloodGroup: document.getElementById("bloodGroup").value,
+            contact: document.getElementById("contact").value,
+          };
+
+          // Store data and navigate
+          fetch("/emergency-type", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }).then(() => {
+            window.location.href = "/emergency-type";
+          });
+        });
+
+      function skipForm() {
+        fetch("/emergency-type", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }).then(() => {
+          window.location.href = "/emergency-type";
+        });
+      }
+    </script>
+  </body>
+</html>
